@@ -1,0 +1,25 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "aphex-service-clients"
+version = "0.1.0"
+description = "Generated API clients for Aphex platform services"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "httpx>=0.26.0",
+    "pydantic>=2.5.0",
+    "tenacity>=8.2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "openapi-python-client>=0.19.0",
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/aphex_clients"]

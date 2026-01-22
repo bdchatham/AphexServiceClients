@@ -1,41 +1,32 @@
-# Archon-Ready Repository Template
+# Aphex Service Clients
 
-This is a GitHub repository template configured for the **Archon** RAG system. It includes Kiro steering that automatically maintains accurate, RAG-ready documentation.
+Generated API clients for Aphex platform services with built-in retry logic, exponential backoff, and jitter.
 
-## What's Included
+## Installation
 
-### Documentation Structure
-- `.kiro/docs/` - Complete documentation skeleton optimized for RAG retrieval
-- `CLAUDE.md` - Documentation contract and standards
-- All required documentation files (overview, architecture, operations, api, data-models, faq)
+```bash
+pip install aphex-service-clients
+```
 
-### Kiro Integration
-- `.kiro/steering/archon-docs.md` - Always-active steering that enforces documentation standards
-- Automatic documentation maintenance across all Kiro tasks
-- RAG-friendly structure and provenance tracking
+## Usage
 
-## Getting Started
+```python
+from aphex_clients.embedding import EmbeddingClient
 
-1. **Use this template** to create a new repository
-2. **Customize** the documentation files under `.kiro/docs/` for your project
-3. **Work with Kiro** - the steering will automatically maintain documentation standards
+async with EmbeddingClient(base_url="http://embedding-svc:8000") as client:
+    response = await client.create_embeddings(input=["Hello world"])
+    embeddings = [d.embedding for d in response.data]
+```
 
-## Documentation Standards
+## Regenerating Clients
 
-All documentation follows these principles:
+When OpenAPI specs change:
 
-- **Grounded in code** - Every statement references actual code or infrastructure
-- **RAG-friendly** - Structured for optimal retrieval (400-800 token sections)
-- **Provenance** - Clear "Source" references to relevant files
-- **No hallucinations** - Only documented, verifiable behavior
-- **Always current** - Updated alongside code changes
+```bash
+pip install -e ".[dev]"
+./scripts/generate-clients.sh
+```
 
-## Archon Integration
+## Services
 
-This repository is configured to be ingested by Archon, which reads all Markdown files under `.kiro/docs/` to build mental models for sourcing code and architectural information.
-
-See `CLAUDE.md` for the complete documentation contract.
-
-## License
-
-[Add your license]
+- **Embedding Service** - OpenAI-compatible embedding generation
