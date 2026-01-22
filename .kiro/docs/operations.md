@@ -30,28 +30,37 @@ When OpenAPI specifications change, regenerate the clients:
 # Install dev dependencies
 pip install -e ".[dev]"
 
-# Run generation script
-./scripts/generate-clients.sh
+# Regenerate clients
+make generate-clients
+
+# Commit the changes
+git add src/aphex_clients/generated/
+git commit -m "chore: regenerate clients from updated specs"
 ```
 
-The script uses `openapi-python-client` to generate typed clients from specs in `openapi/`.
+**Important:** The CI workflow (`check-clients`) will fail if generated code doesn't match committed code. This ensures you consciously commit client changes when specs change.
 
 **Source**
 - `scripts/generate-clients.sh`
+- `Makefile`
+- `.github/workflows/check-clients.yaml`
 
 ## GitHub Actions Workflow
 
-The repository includes a GitHub Actions workflow that automatically regenerates clients when OpenAPI specs change.
+The repository includes a GitHub Actions workflow that verifies generated clients match the committed code.
 
-**Trigger:** Push to `mainline` branch with changes to `openapi/**`
+**Trigger:** Push or PR to `mainline` branch
 
-**Actions:**
-1. Install `openapi-python-client`
-2. Run `./scripts/generate-clients.sh`
-3. Commit and push regenerated code
+**Behavior:**
+1. Regenerates clients from OpenAPI specs
+2. Compares generated code to committed code
+3. **Fails if they differ** - forces developers to commit client changes
+
+This ensures OpenAPI specs and generated clients stay in sync.
 
 **Source**
-- `.github/workflows/generate-clients.yaml`
+- `.github/workflows/check-clients.yaml`
+- `Makefile` (check-clients target)
 
 ## Versioning
 

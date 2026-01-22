@@ -4,11 +4,43 @@
 
 AphexServiceClients follows a layered architecture:
 
-1. **Base HTTP Layer** - `RetryingClient` provides resilient HTTP communication
-2. **Service Client Layer** - Service-specific clients (e.g., `EmbeddingClient`) provide typed APIs
-3. **OpenAPI Specs** - Define API contracts for code generation
+1. **Generated Clients** - Auto-generated from OpenAPI specs, provide typed models and API methods
+2. **Wrapper Clients** - Inject `RetryingClient` into generated clients for resilience
+3. **Base HTTP Layer** - `RetryingClient` provides retry with exponential backoff and jitter
+
+```
+┌─────────────────────────────────────┐
+│  EmbeddingClient / QueryClient      │  ← Wrapper layer (retry injection)
+├─────────────────────────────────────┤
+│  Generated Clients (from OpenAPI)   │  ← Typed models & API methods
+├─────────────────────────────────────┤
+│  RetryingClient (httpx + tenacity)  │  ← Resilient HTTP transport
+└─────────────────────────────────────┘
+```
 
 ## Components
+
+### Generated Clients
+
+Auto-generated from OpenAPI specs using `openapi-python-client`. Located in `src/aphex_clients/generated/`.
+
+**Generated for each service:**
+- `client.py` - Base client with httpx integration
+- `models/` - Pydantic-style request/response models
+- `api/default/` - Typed async methods for each endpoint
+
+**Generation:**
+```bash
+make generate-clients
+```
+
+**CI Verification:**
+The `check-clients` workflow fails if generated code doesn't match committed code, ensuring specs and clients stay in sync.
+
+**Source**
+- `src/aphex_clients/generated/`
+- `scripts/generate-clients.sh`
+- `Makefile`
 
 ### RetryingClient
 
@@ -26,7 +58,7 @@ Base async HTTP client that wraps `httpx.AsyncClient` with automatic retry on tr
 
 ### EmbeddingClient
 
-High-level client for the Aphex embedding service. Provides methods for generating text embeddings using the OpenAI-compatible API format.
+Wrapper client for the Aphex embedding service. Injects `RetryingClient` into the generated client for automatic retry on transient failures.
 
 **Methods:**
 - `embed(texts: List[str])` - Generate embeddings for multiple texts
@@ -39,10 +71,11 @@ High-level client for the Aphex embedding service. Provides methods for generati
 
 **Source**
 - `src/aphex_clients/embedding.py`
+- `src/aphex_clients/generated/embedding/`
 
 ### QueryClient
 
-Client for the Archon Knowledge Base Query Service. Provides semantic search over ingested documents.
+Wrapper client for the Archon Knowledge Base Query Service. Injects `RetryingClient` into the generated client for automatic retry.
 
 **Methods:**
 - `retrieve(query: str, k: int = None)` - Search for relevant document chunks
@@ -54,13 +87,15 @@ Client for the Archon Knowledge Base Query Service. Provides semantic search ove
 
 **Source**
 - `src/aphex_clients/query.py`
+- `src/aphex_clients/generated/query/`
 
 ## Technology Stack
 
 - **Python 3.11+** - Runtime
 - **httpx** - Async HTTP client
 - **tenacity** - Retry logic with exponential backoff
-- **pydantic** - Data validation (for generated clients)
+- **attrs** - Data classes for generated models
+- **openapi-python-client** - Code generation from OpenAPI specs (dev dependency)
 
 ## Architectural Patterns
 
