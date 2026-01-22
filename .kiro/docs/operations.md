@@ -1,30 +1,102 @@
 # Operations
 
-## Deployment
+## Installation
 
-[Describe deployment procedures]
+### From PyPI (when published)
 
-## Monitoring
+```bash
+pip install aphex-service-clients
+```
 
-[Describe monitoring setup and key metrics]
+### From Source
 
-## Alerting
+```bash
+git clone https://github.com/bdchatham/AphexServiceClients.git
+cd AphexServiceClients
+pip install -e .
+```
 
-[Describe alerting configuration and response procedures]
+### With Development Dependencies
 
-## Runbooks
+```bash
+pip install -e ".[dev]"
+```
 
-### Common Issues
+## Regenerating Clients from OpenAPI Specs
 
-[Document common issues and their solutions]
+When OpenAPI specifications change, regenerate the clients:
 
-### Troubleshooting
+```bash
+# Install dev dependencies
+pip install -e ".[dev]"
 
-[Provide troubleshooting guides]
+# Run generation script
+./scripts/generate-clients.sh
+```
 
-## Maintenance
-
-[Describe regular maintenance tasks]
+The script uses `openapi-python-client` to generate typed clients from specs in `openapi/`.
 
 **Source**
-[Add references to relevant infrastructure and deployment files]
+- `scripts/generate-clients.sh`
+
+## GitHub Actions Workflow
+
+The repository includes a GitHub Actions workflow that automatically regenerates clients when OpenAPI specs change.
+
+**Trigger:** Push to `mainline` branch with changes to `openapi/**`
+
+**Actions:**
+1. Install `openapi-python-client`
+2. Run `./scripts/generate-clients.sh`
+3. Commit and push regenerated code
+
+**Source**
+- `.github/workflows/generate-clients.yaml`
+
+## Versioning
+
+The package follows semantic versioning:
+- **Major**: Breaking API changes
+- **Minor**: New features, backward compatible
+- **Patch**: Bug fixes, backward compatible
+
+Current version is defined in `pyproject.toml`.
+
+**Source**
+- `pyproject.toml`
+
+## Troubleshooting
+
+### Connection Errors
+
+If clients fail to connect to services:
+
+1. Verify the service URL is correct
+2. Check network connectivity to the service
+3. Verify the service is running and healthy
+4. Check for firewall or network policy issues
+
+The client will automatically retry up to 5 times with exponential backoff.
+
+### Timeout Errors
+
+If requests timeout:
+
+1. Check if the service is under heavy load
+2. Consider increasing the timeout parameter:
+   ```python
+   client = EmbeddingClient(base_url="...", timeout=120.0)
+   ```
+3. For embedding requests, large batches may need longer timeouts
+
+### Import Errors
+
+If imports fail:
+
+1. Verify the package is installed: `pip show aphex-service-clients`
+2. Check Python version is 3.11+
+3. Reinstall: `pip install --force-reinstall aphex-service-clients`
+
+**Source**
+- `src/aphex_clients/http.py` - Retry configuration
+- `src/aphex_clients/embedding.py` - Timeout configuration

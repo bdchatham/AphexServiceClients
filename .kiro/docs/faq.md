@@ -3,35 +3,83 @@
 ## General Questions
 
 ### What is this repository for?
-[Answer]
+
+AphexServiceClients provides shared API clients for Aphex platform services. It ensures consistent retry logic, exponential backoff, and jitter across all services that communicate with platform APIs.
 
 ### How does this fit into the larger system?
-[Answer]
+
+This package is a dependency for services that need to call Aphex platform APIs. For example, `ArchonKnowledgeBaseInfrastructure` uses `EmbeddingClient` to generate embeddings for documents.
+
+### Why not just use httpx directly?
+
+Using `httpx` directly requires each service to implement its own retry logic. This package provides:
+- Consistent retry behavior across all services
+- Exponential backoff with jitter to prevent thundering herd
+- Typed clients for better developer experience
 
 ## Development Questions
 
-### How do I set up my development environment?
-[Answer]
+### How do I add a new service client?
+
+1. Add the OpenAPI spec to `openapi/` directory
+2. Create a client class in `src/aphex_clients/` that uses `RetryingClient`
+3. Export the client from `src/aphex_clients/__init__.py`
+4. Update documentation in `.kiro/docs/`
 
 ### How do I run tests?
-[Answer]
+
+```bash
+pip install -e ".[dev]"
+pytest
+```
+
+### How do I regenerate clients from OpenAPI specs?
+
+```bash
+./scripts/generate-clients.sh
+```
+
+This runs automatically via GitHub Actions when specs change.
 
 ## Operational Questions
 
-### How do I deploy changes?
-[Answer]
+### What happens when a service is unavailable?
 
-### What should I do if [common issue]?
-[Answer]
+The client automatically retries up to 5 times with exponential backoff:
+- 1st retry: ~1 second wait
+- 2nd retry: ~2 seconds wait
+- 3rd retry: ~4 seconds wait
+- 4th retry: ~8 seconds wait
+- 5th retry: ~16 seconds wait (capped at 60s)
+
+Random jitter (0-5 seconds) is added to each wait to prevent synchronized retries.
+
+### How do I increase the timeout for slow services?
+
+Pass a custom timeout to the client constructor:
+
+```python
+client = EmbeddingClient(base_url="...", timeout=120.0)
+```
+
+### What exceptions should I catch?
+
+After all retries are exhausted:
+- `httpx.ConnectError` - Service unreachable
+- `httpx.TimeoutException` - Request timed out
+- `httpx.HTTPStatusError` - Service returned error status (not retried)
 
 ## Archon-Specific Questions
 
 ### How is this repository ingested by Archon?
+
 Archon reads all Markdown files under `.kiro/docs/` from this public GitHub repository. Documentation follows the contract defined in `CLAUDE.md`.
 
 ### How do I update documentation?
-Update the relevant files under `.kiro/docs/` and ensure changes are grounded in code. Include "Source" references to relevant files.
+
+Update the relevant files under `.kiro/docs/` and ensure changes are grounded in code. Include "Source" references to relevant files. Do not create new documentation files; add content to the existing 6 files.
 
 **Source**
 - `CLAUDE.md`
 - `.kiro/steering/archon-docs.md`
+- `src/aphex_clients/http.py`
