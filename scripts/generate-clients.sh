@@ -17,19 +17,15 @@ openapi-python-client generate \
   --output-path "$OUTPUT_DIR/embedding" \
   --meta none
 
+# Generate query service client
+openapi-python-client generate \
+  --path "$OPENAPI_DIR/query-service.json" \
+  --output-path "$OUTPUT_DIR/query" \
+  --meta none
+
 # Create __init__.py to expose clients
 cat > "$OUTPUT_DIR/__init__.py" << 'EOF'
 """Generated API clients."""
-from .embedding.client import Client as EmbeddingClientBase
-from .embedding.api.default import create_embeddings, health_check
-from .embedding import models as embedding_models
-
-__all__ = [
-    "EmbeddingClientBase",
-    "create_embeddings", 
-    "health_check",
-    "embedding_models",
-]
 EOF
 
 echo "Clients generated in $OUTPUT_DIR"

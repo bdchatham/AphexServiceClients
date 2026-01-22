@@ -1,0 +1,23 @@
+name: Check Generated Clients
+
+on:
+  push:
+    branches: [mainline]
+  pull_request:
+    branches: [mainline]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install openapi-python-client>=0.19.0
+
+      - name: Check generated clients match specs
+        run: make check-clients

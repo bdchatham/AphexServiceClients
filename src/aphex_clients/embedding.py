@@ -1,17 +1,20 @@
 """Embedding service client with retry logic.
 
-Wraps the generated OpenAPI client with exponential backoff and jitter.
+Wraps the generated OpenAPI client with a RetryingClient for resilience.
 """
 
 from typing import List
 
-from ..http import RetryingClient
+from .http import RetryingClient
+from .generated.embedding.client import Client as GeneratedClient
+from .generated.embedding.api.default import create_embeddings, health_check
+from .generated.embedding.models import EmbeddingRequest
 
 
 class EmbeddingClient:
     """Client for the Aphex embedding service.
     
-    Provides embedding generation with automatic retry on transient failures.
+    Wraps the generated OpenAPI client with automatic retry on transient failures.
     
     Usage:
         async with EmbeddingClient(base_url="http://embedding-svc:8000") as client:
@@ -26,13 +29,17 @@ class EmbeddingClient:
     ):
         self.base_url = base_url.rstrip("/")
         self.model = model
-        self._client = RetryingClient(base_url=self.base_url, timeout=timeout)
+        self._http_client = RetryingClient(timeout=timeout)
+        self._client = GeneratedClient(
+            base_url=self.base_url,
+            raise_on_unexpected_status=True,
+        ).set_async_httpx_client(self._http_client)
     
     async def __aenter__(self):
         return self
     
     async def __aexit__(self, *args):
-        await self._client.aclose()
+        await self._http_client.aclose()
     
     async def embed(self, texts: List[str]) -> List[List[float]]:
         """Generate embeddings for texts.
@@ -46,13 +53,10 @@ class EmbeddingClient:
         if not texts:
             return []
         
-        response = await self._client.post(
-            "/v1/embeddings",
-            json={"input": texts, "model": self.model},
-        )
-        response.raise_for_status()
-        data = response.json()
-        return [item["embedding"] for item in data["data"]]
+        request = EmbeddingRequest(input_=texts, model=self.model)
+        response = await create_embeddings.asyncio(client=self._client, body=request)
+        
+        return [item.embedding for item in response.data]
     
     async def embed_single(self, text: str) -> List[float]:
         """Generate embedding for a single text."""
@@ -62,7 +66,7 @@ class EmbeddingClient:
     async def health_check(self) -> bool:
         """Check if service is healthy."""
         try:
-            response = await self._client.get("/health")
-            return response.status_code == 200
+            response = await health_check.asyncio_detailed(client=self._client)
+            return response.status_code.value == 200
         except Exception:
             return False

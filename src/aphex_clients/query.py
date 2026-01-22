@@ -1,27 +1,24 @@
 """Query service client with retry logic.
 
-Client for the Archon Knowledge Base Query Service.
+Wraps the generated OpenAPI client with a RetryingClient for resilience.
 """
 
-from dataclasses import dataclass
 from typing import List, Optional
 
 from .http import RetryingClient
+from .generated.query.client import Client as GeneratedClient
+from .generated.query.api.default import retrieve, health_check, readiness_check
+from .generated.query.models import RetrieveRequest, ChunkResult as GeneratedChunkResult
 
 
-@dataclass
-class ChunkResult:
-    """A retrieved document chunk."""
-    content: str
-    source: str
-    chunk_index: int
-    score: float
+# Re-export the generated ChunkResult for convenience
+ChunkResult = GeneratedChunkResult
 
 
 class QueryClient:
     """Client for the Archon Knowledge Base Query Service.
     
-    Provides semantic search over ingested documents with automatic retry.
+    Wraps the generated OpenAPI client with automatic retry on transient failures.
     
     Usage:
         async with QueryClient(base_url="http://query:8080") as client:
@@ -32,19 +29,23 @@ class QueryClient:
     
     def __init__(self, base_url: str, timeout: float = 30.0):
         self.base_url = base_url.rstrip("/")
-        self._client = RetryingClient(base_url=self.base_url, timeout=timeout)
+        self._http_client = RetryingClient(timeout=timeout)
+        self._client = GeneratedClient(
+            base_url=self.base_url,
+            raise_on_unexpected_status=True,
+        ).set_async_httpx_client(self._http_client)
     
     async def __aenter__(self):
         return self
     
     async def __aexit__(self, *args):
-        await self._client.aclose()
+        await self._http_client.aclose()
     
     async def retrieve(
         self,
         query: str,
         k: Optional[int] = None,
-    ) -> List[ChunkResult]:
+    ) -> List[GeneratedChunkResult]:
         """Retrieve relevant document chunks for a query.
         
         Args:
@@ -54,36 +55,22 @@ class QueryClient:
         Returns:
             List of ChunkResult ordered by relevance
         """
-        payload = {"query": query}
-        if k is not None:
-            payload["k"] = k
-        
-        response = await self._client.post("/v1/retrieve", json=payload)
-        response.raise_for_status()
-        data = response.json()
-        
-        return [
-            ChunkResult(
-                content=chunk["content"],
-                source=chunk["source"],
-                chunk_index=chunk["chunk_index"],
-                score=chunk["score"],
-            )
-            for chunk in data["chunks"]
-        ]
+        request = RetrieveRequest(query=query, k=k)
+        response = await retrieve.asyncio(client=self._client, body=request)
+        return response.chunks
     
     async def health_check(self) -> bool:
         """Check if service is healthy."""
         try:
-            response = await self._client.get("/health")
-            return response.status_code == 200
+            response = await health_check.asyncio_detailed(client=self._client)
+            return response.status_code.value == 200
         except Exception:
             return False
     
     async def ready_check(self) -> bool:
         """Check if service is ready (all dependencies healthy)."""
         try:
-            response = await self._client.get("/ready")
-            return response.status_code == 200
+            response = await readiness_check.asyncio_detailed(client=self._client)
+            return response.status_code.value == 200
         except Exception:
             return False
