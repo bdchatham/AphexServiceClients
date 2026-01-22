@@ -35,10 +35,17 @@ pip install aphex-service-clients
 ## Quick Start
 
 ```python
-from aphex_clients import EmbeddingClient
+from aphex_clients import EmbeddingClient, QueryClient
 
+# Generate embeddings
 async with EmbeddingClient(base_url="http://embedding-svc:8000") as client:
     embeddings = await client.embed(["Hello world", "Another text"])
+
+# Query knowledge base
+async with QueryClient(base_url="http://query:8080") as client:
+    results = await client.retrieve("How do I deploy?")
+    for chunk in results:
+        print(f"{chunk.source}: {chunk.content}")
 ```
 
 ## Related Repositories

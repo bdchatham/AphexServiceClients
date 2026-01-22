@@ -40,6 +40,21 @@ High-level client for the Aphex embedding service. Provides methods for generati
 **Source**
 - `src/aphex_clients/embedding.py`
 
+### QueryClient
+
+Client for the Archon Knowledge Base Query Service. Provides semantic search over ingested documents.
+
+**Methods:**
+- `retrieve(query: str, k: int = None)` - Search for relevant document chunks
+- `health_check()` - Check service health
+- `ready_check()` - Check if service and dependencies are ready
+
+**Default Configuration:**
+- Timeout: 30 seconds
+
+**Source**
+- `src/aphex_clients/query.py`
+
 ## Technology Stack
 
 - **Python 3.11+** - Runtime
@@ -76,6 +91,7 @@ async with EmbeddingClient(base_url="...") as client:
 ### Upstream Dependencies
 
 - **Embedding Service** - OpenAI-compatible embedding API (defined in `openapi/embedding-service.json`)
+- **Query Service** - Knowledge base retrieval API (defined in `openapi/query-service.json`)
 
 ### Downstream Dependencies
 

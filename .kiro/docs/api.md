@@ -102,7 +102,67 @@ Retry configuration:
 **Source**
 - `src/aphex_clients/http.py`
 
-## OpenAPI Specification: Embedding Service
+## QueryClient
+
+Client for the Archon Knowledge Base Query Service with automatic retry logic.
+
+### Constructor
+
+```python
+QueryClient(
+    base_url: str,
+    timeout: float = 30.0
+)
+```
+
+**Parameters:**
+- `base_url` - Base URL of the query service (e.g., `http://query:8080`)
+- `timeout` - Request timeout in seconds (default: 30.0)
+
+### Methods
+
+#### retrieve(query: str, k: int = None) -> List[ChunkResult]
+
+Search for relevant document chunks.
+
+```python
+async with QueryClient(base_url="http://query:8080") as client:
+    results = await client.retrieve("How do I deploy?", k=5)
+    for chunk in results:
+        print(f"[{chunk.score:.2f}] {chunk.source}")
+        print(chunk.content)
+```
+
+**Parameters:**
+- `query` - Search query text
+- `k` - Number of results to return (optional, uses server default)
+
+**Returns:**
+- List of `ChunkResult` objects ordered by relevance
+
+#### health_check() -> bool
+
+Check if service is healthy.
+
+#### ready_check() -> bool
+
+Check if service and all dependencies (embedding service, vector store) are ready.
+
+### ChunkResult
+
+```python
+@dataclass
+class ChunkResult:
+    content: str      # Chunk text content
+    source: str       # Source document path
+    chunk_index: int  # Index within source document
+    score: float      # Similarity score (0-1)
+```
+
+**Source**
+- `src/aphex_clients/query.py`
+
+## OpenAPI Specification: Query Service
 
 The embedding service implements an OpenAI-compatible API.
 
@@ -142,3 +202,59 @@ Health check endpoint.
 
 **Source**
 - `openapi/embedding-service.json`
+
+## OpenAPI Specification: Query Service
+
+The query service provides semantic search over ingested documents.
+
+### POST /v1/retrieve
+
+Retrieve relevant document chunks for a query.
+
+**Request:**
+```json
+{
+  "query": "How do I deploy the application?",
+  "k": 5
+}
+```
+
+**Response:**
+```json
+{
+  "chunks": [
+    {
+      "content": "To deploy the application, run `npm run deploy`...",
+      "source": "https://github.com/org/repo/.kiro/docs/operations.md",
+      "chunk_index": 3,
+      "score": 0.89
+    }
+  ],
+  "query": "How do I deploy the application?"
+}
+```
+
+### GET /health
+
+Health check endpoint.
+
+**Response:**
+```json
+{"status": "healthy"}
+```
+
+### GET /ready
+
+Readiness check - verifies embedding service and vector store connectivity.
+
+**Response:**
+```json
+{
+  "status": "ready",
+  "embedding_service": "healthy",
+  "vector_store": "healthy"
+}
+```
+
+**Source**
+- `openapi/query-service.json`
