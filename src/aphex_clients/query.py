@@ -29,7 +29,7 @@ class QueryClient:
     
     def __init__(self, base_url: str, timeout: float = 30.0):
         self.base_url = base_url.rstrip("/")
-        self._http_client = RetryingClient(timeout=timeout)
+        self._http_client = RetryingClient(base_url=self.base_url, timeout=timeout)
         self._client = GeneratedClient(
             base_url=self.base_url,
             raise_on_unexpected_status=True,

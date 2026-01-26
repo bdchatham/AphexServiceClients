@@ -29,7 +29,7 @@ class EmbeddingClient:
     ):
         self.base_url = base_url.rstrip("/")
         self.model = model
-        self._http_client = RetryingClient(timeout=timeout)
+        self._http_client = RetryingClient(base_url=self.base_url, timeout=timeout)
         self._client = GeneratedClient(
             base_url=self.base_url,
             raise_on_unexpected_status=True,
