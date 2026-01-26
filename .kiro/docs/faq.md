@@ -69,6 +69,33 @@ After all retries are exhausted:
 - `httpx.TimeoutException` - Request timed out
 - `httpx.HTTPStatusError` - Service returned error status (not retried)
 
+### What service URLs should I use in Kubernetes?
+
+Use cluster-internal service names:
+
+```python
+# Same namespace
+EmbeddingClient(base_url="http://embedding-svc:8000")
+
+# Cross-namespace (fully qualified)
+QueryClient(base_url="http://query.archon-knowledge-base.svc.cluster.local:8080")
+```
+
+See `operations.md` for complete Kubernetes deployment guidance.
+
+### How do I configure the embedding model?
+
+Pass the model name to the `EmbeddingClient` constructor:
+
+```python
+client = EmbeddingClient(
+    base_url="http://embedding-svc:8000",
+    model="BAAI/bge-base-en-v1.5"  # Default
+)
+```
+
+The model must be supported by the embedding service deployment.
+
 ## Archon-Specific Questions
 
 ### How is this repository ingested by Archon?

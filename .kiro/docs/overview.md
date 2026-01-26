@@ -20,7 +20,7 @@ A base HTTP client built on `httpx.AsyncClient` that automatically retries faile
 
 ### Service Clients
 
-High-level clients for specific Aphex services (e.g., `EmbeddingClient`). These wrap the `RetryingClient` and provide typed methods for each API endpoint.
+High-level clients for specific platform services (e.g., `EmbeddingClient`, `QueryClient`). These wrap the `RetryingClient` and provide typed methods for each API endpoint.
 
 ### OpenAPI Specifications
 

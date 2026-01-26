@@ -22,6 +22,39 @@ pip install -e .
 pip install -e ".[dev]"
 ```
 
+## Kubernetes Deployment
+
+When using these clients in Kubernetes pods, use cluster-internal service names:
+
+### Typical Service URLs
+
+```python
+# Embedding service (in archon-knowledge-base namespace)
+embedding_client = EmbeddingClient(
+    base_url="http://embedding-svc.archon-knowledge-base:8000"
+)
+
+# Query service (in archon-knowledge-base namespace)
+query_client = QueryClient(
+    base_url="http://query.archon-knowledge-base:8080"
+)
+```
+
+### Cross-Namespace Access
+
+For services in different namespaces, use fully qualified service names:
+
+```python
+# From archon-orchestrator namespace accessing query service
+query_client = QueryClient(
+    base_url="http://query.archon-knowledge-base.svc.cluster.local:8080"
+)
+```
+
+**Source**
+- Kubernetes DNS naming conventions
+- `manifests/` in consuming repositories (e.g., ArchonKnowledgeBaseInfrastructure)
+
 ## Regenerating Clients from OpenAPI Specs
 
 When OpenAPI specifications change, regenerate the clients:

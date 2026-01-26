@@ -162,7 +162,7 @@ class ChunkResult:
 **Source**
 - `src/aphex_clients/query.py`
 
-## OpenAPI Specification: Query Service
+## OpenAPI Specification: Embedding Service
 
 The embedding service implements an OpenAI-compatible API.
 

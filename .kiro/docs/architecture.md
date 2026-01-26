@@ -20,6 +20,18 @@ AphexServiceClients follows a layered architecture:
 
 ## Components
 
+### Package Exports
+
+The package exports four public classes from `src/aphex_clients/__init__.py`:
+
+- **`EmbeddingClient`** - Client for embedding service
+- **`QueryClient`** - Client for Knowledge Base query service
+- **`ChunkResult`** - Data class for query results (re-exported from generated code)
+- **`RetryingClient`** - Base HTTP client with retry logic (typically not used directly)
+
+**Source**
+- `src/aphex_clients/__init__.py`
+
 ### Generated Clients
 
 Auto-generated from OpenAPI specs using `openapi-python-client`. Located in `src/aphex_clients/generated/`.
@@ -58,7 +70,7 @@ Base async HTTP client that wraps `httpx.AsyncClient` with automatic retry on tr
 
 ### EmbeddingClient
 
-Wrapper client for the Aphex embedding service. Injects `RetryingClient` into the generated client for automatic retry on transient failures.
+Wrapper client for the embedding service. Injects `RetryingClient` into the generated client for automatic retry on transient failures.
 
 **Methods:**
 - `embed(texts: List[str])` - Generate embeddings for multiple texts
@@ -68,6 +80,15 @@ Wrapper client for the Aphex embedding service. Injects `RetryingClient` into th
 **Default Configuration:**
 - Model: `BAAI/bge-base-en-v1.5`
 - Timeout: 60 seconds
+
+**Typical Usage in Kubernetes:**
+```python
+# Same namespace
+EmbeddingClient(base_url="http://embedding-svc:8000")
+
+# Cross-namespace
+EmbeddingClient(base_url="http://embedding-svc.archon-knowledge-base:8000")
+```
 
 **Source**
 - `src/aphex_clients/embedding.py`
@@ -84,6 +105,15 @@ Wrapper client for the Archon Knowledge Base Query Service. Injects `RetryingCli
 
 **Default Configuration:**
 - Timeout: 30 seconds
+
+**Typical Usage in Kubernetes:**
+```python
+# Same namespace
+QueryClient(base_url="http://query:8080")
+
+# Cross-namespace
+QueryClient(base_url="http://query.archon-knowledge-base.svc.cluster.local:8080")
+```
 
 **Source**
 - `src/aphex_clients/query.py`
