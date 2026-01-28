@@ -2,8 +2,8 @@ name: Publish Package
 
 on:
   push:
-    branches:
-      - mainline
+    tags:
+      - 'v*.*.*'
 
 jobs:
   check:
