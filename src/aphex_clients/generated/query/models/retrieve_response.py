@@ -1,10 +1,4 @@
-from collections.abc import Mapping
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    TypeVar,
-    Union,
-)
+from typing import TYPE_CHECKING, Any, TypeVar, Union
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -51,10 +45,10 @@ class RetrieveResponse:
         return field_dict
 
     @classmethod
-    def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
+    def from_dict(cls: type[T], src_dict: dict[str, Any]) -> T:
         from ..models.chunk_result import ChunkResult
 
-        d = dict(src_dict)
+        d = src_dict.copy()
         chunks = []
         _chunks = d.pop("chunks", UNSET)
         for chunks_item_data in _chunks or []:

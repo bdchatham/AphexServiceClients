@@ -1,9 +1,4 @@
-from collections.abc import Mapping
-from typing import (
-    Any,
-    TypeVar,
-    Union,
-)
+from typing import Any, TypeVar, Union
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -41,8 +36,8 @@ class EmbeddingUsage:
         return field_dict
 
     @classmethod
-    def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        d = dict(src_dict)
+    def from_dict(cls: type[T], src_dict: dict[str, Any]) -> T:
+        d = src_dict.copy()
         prompt_tokens = d.pop("prompt_tokens", UNSET)
 
         total_tokens = d.pop("total_tokens", UNSET)

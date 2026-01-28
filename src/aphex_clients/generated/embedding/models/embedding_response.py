@@ -1,10 +1,4 @@
-from collections.abc import Mapping
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    TypeVar,
-    Union,
-)
+from typing import TYPE_CHECKING, Any, TypeVar, Union
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -66,11 +60,11 @@ class EmbeddingResponse:
         return field_dict
 
     @classmethod
-    def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
+    def from_dict(cls: type[T], src_dict: dict[str, Any]) -> T:
         from ..models.embedding_data import EmbeddingData
         from ..models.embedding_usage import EmbeddingUsage
 
-        d = dict(src_dict)
+        d = src_dict.copy()
         object_ = d.pop("object", UNSET)
 
         data = []

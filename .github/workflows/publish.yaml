@@ -16,7 +16,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: pip install openapi-python-client==0.21.7
+        run: pip install openapi-python-client==0.22.0
 
       - name: Check generated clients match specs
         run: make check-clients
