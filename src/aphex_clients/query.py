@@ -59,6 +59,24 @@ class QueryClient:
         response = await retrieve.asyncio(client=self._client, body=request)
         return response.chunks
     
+    async def get_document(self, doc_id: str) -> str:
+        """Retrieve full document content by doc_id.
+        
+        Args:
+            doc_id: Document identifier (source path)
+            
+        Returns:
+            Full document content
+        """
+        import httpx
+        response = await self._http_client.post(
+            f"{self.base_url}/v1/document",
+            json={"doc_id": doc_id},
+        )
+        response.raise_for_status()
+        result = response.json()
+        return result["content"]
+    
     async def health_check(self) -> bool:
         """Check if service is healthy."""
         try:
